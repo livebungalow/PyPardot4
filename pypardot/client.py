@@ -177,5 +177,5 @@ class PardotAPI(object):
     def _build_auth_header(self):
         if not self.user_key or not self.api_key:
             raise Exception('Cannot build Authorization header. user or api key is empty')
-        auth_string = 'Pardot api_key={self.api_key}, user_key={self.user_key}'
+        auth_string = f'Pardot api_key={self.api_key}, user_key={self.user_key}'
         return {'Authorization': auth_string}
