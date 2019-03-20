@@ -64,6 +64,7 @@ class PardotAPI(object):
         self.visitors = Visitors(self)
         self.visitoractivities = VisitorActivities(self)
 
+
     def post(self, object_name, path=None, params=None, data=None, retries=0):
         """
         Makes a POST request to the API. Checks for invalid requests that raise PardotAPIErrors. If the API key is
@@ -73,14 +74,11 @@ class PardotAPI(object):
         if params is None:
             params = {}
         params.update({'format': 'json'})
-        headers = {
-            'Authorization': f'Bearer {self.api_key}'
-        }
         if data is None:
             data = {}
         try:
             self._check_auth(object_name=object_name)
-            request = requests.post(self._full_path(object_name, self.version, path), params=params, data=data, headers=headers)
+            request = requests.post(self._full_path(object_name, self.version, path), params=params, data=data, headers=self._build_auth_header())
             response = self._check_response(request)
             return response
         except PardotAPIError as err:
@@ -89,6 +87,7 @@ class PardotAPI(object):
                 return response
             else:
                 raise err
+
 
     def get(self, object_name, path=None, params=None, retries=0):
         """
@@ -99,12 +98,9 @@ class PardotAPI(object):
         if params is None:
             params = {}
         params.update({'format': 'json'})
-        headers = {
-            'Authorization': f'Bearer {self.api_key}'
-        }
         try:
             self._check_auth(object_name=object_name)
-            request = requests.get(self._full_path(object_name, self.version, path), params=params, headers=headers)
+            request = requests.get(self._full_path(object_name, self.version, path), params=params, headers=self._build_auth_header())
             response = self._check_response(request)
             return response
         except PardotAPIError as err:
@@ -113,6 +109,7 @@ class PardotAPI(object):
                 return response
             else:
                 raise err
+
 
     def _handle_expired_api_key(self, err, retries, method, object_name, path, params):
         """
@@ -128,6 +125,7 @@ class PardotAPI(object):
         else:
             raise err
 
+
     @staticmethod
     def _full_path(object_name, version, path=None):
         """Builds the full path for the API request"""
@@ -135,6 +133,7 @@ class PardotAPI(object):
         if path:
             return full + '{0}'.format(path)
         return full
+
 
     @staticmethod
     def _check_response(response):
@@ -152,11 +151,13 @@ class PardotAPI(object):
         else:
             return response.status_code
 
+
     def _check_auth(self, object_name):
         if object_name == 'login':
             return
         if self.api_key is None:
             self.authenticate()
+
 
     def authenticate(self):
         """
@@ -171,3 +172,10 @@ class PardotAPI(object):
             return False
         except PardotAPIError:
             return False
+
+
+    def _build_auth_header(self):
+        if not self.user_key or not self.api_key:
+            raise Exception('Cannot build Authorization header. user or api key is empty')
+        auth_string = 'Pardot api_key={self.api_key}, user_key={self.user_key}'
+        return {'Authorization': auth_string}
