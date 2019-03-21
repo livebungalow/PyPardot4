@@ -165,8 +165,15 @@ class PardotAPI(object):
          False if authentication fails.
         """
         try:
-            response = requests.post(self._full_path('login', self.version), data={'email': self.email, 'password': self.password})
-            auth = self._check_response(request)
+            login_data = {
+                'email': self.email,
+                'password': self.password,
+                'user_key': self.user_key,
+                'api_key': self.api_key,
+                'format': 'json'
+            }
+            response = requests.post(self._full_path('login', self.version), data=login_data)
+            auth = self._check_response(response)
             self.api_key = auth.get('api_key')
             if self.api_key is not None:
                 return True
